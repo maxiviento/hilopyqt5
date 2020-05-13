@@ -23,7 +23,7 @@ class Aplicacion(object):
         #apertura de hilos
         self.parseo.countChanged.connect(self.updateProgressBar)
         self.parseo.start()
-        self.parseo.parsea_mensajes_contactos() #parsea mensajes de los contactos
+        self.parseo.parsea()
         nav.driver.close()
 
 def main():

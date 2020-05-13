@@ -28,8 +28,9 @@ class Parseador (QThread):
       self.fecha_hora = self.fecha_y_hora()
       self.hoy = datetime.now().date()
       #definimos donde guardo datos del parseo, hoy es excel mañana bbdd
-      self.ruta_parseo = r"{}\parseos\{}_mensajes_{}.xlsx".format(self.directorio, self.origen, self.fecha_hora)
+      self.ruta_parseo = r"{}\parseos\peliculas_{}.xlsx".format(self.directorio, self.fecha_hora)
       self.excel_parseo = self.crea_archivo_parseo()
+
       self.val = 0
 
     def run(self):
@@ -57,8 +58,8 @@ class Parseador (QThread):
       self.parseo = self.excel_parseo.active
       self.parseo['A1'] = 'titleColumn'
       self.parseo['B1'] = 'peli'
-      self.parseo['C1'] = 'Contacto'
-      self.parseo['D1'] = 'Mensajes'
+      self.parseo['C1'] = 'Año'
+
       self.excel_parseo.save(self.ruta_parseo)
       return self.excel_parseo
 
@@ -68,17 +69,32 @@ class Parseador (QThread):
 
     def emitidos(self):
       return self.val
+
+    def formato_texto(self, texto, index):
+      aux = texto[::-1]
+      busca_par_ab = aux.find('(')
+      año = aux[1:busca_par_ab]
+      año = año[::-1]
+      año = año[:4]
+      aux = aux[busca_par_ab + 2:]
+      busca_salto_linea = aux.find("\n")
+      titulo = aux[:busca_salto_linea - 6]
+      titulo = titulo[::-1]
+      index = str(index + 1)
+      return index, titulo, año
+
     
     @pyqtSlot()
     def parsea (self):
-      #self.ui.plainTextEdit.appendPlainText("Contactos definitivos: " + str(total))
-      #self.progressBar_pars.setMaximum(total)
-      for index, row in enumerate(self.contactos_definitivos, start=1): 
-        self.val = index
-        self.emitidos()
-        contacto = row[0]
-        #self.ui.plainTextEdit.appendPlainText(contacto + " " + str(index) + "/" + str(total))
-        #self.progressBar_pars.setValue (index)
-        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-        pass
+      soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+      lista_titulos = soup.findAll('td', {'class' : 'titleColumn'})
+      total = len(lista_titulos)
+      for index, i in enumerate(lista_titulos, start=1):
+        self.val = 100 * float(index)/float(total)
+        print(str(self.val), i.text)
+        tupla_p_excel = self.formato_texto(i.text, index)
+        self.parseo.append(tupla_p_excel)
+      
+      self.guarda_archivo_parseo()
+
             
