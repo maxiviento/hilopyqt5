@@ -15,12 +15,11 @@ import os
 import json
 import numpy as np
 
-class Parseador (QThread):
+class Parseador():
+    def __init__(self, nav, signal):
 
-    countChanged = pyqtSignal(int)
-    
-    def __init__(self, nav, parent = None):
-      super (Parseador, self).__init__(parent)
+      self.countChanged = signal
+
       self.nav = nav
       self.driver = self.nav.abrir_Cr()
       self.username = os.environ['username']
@@ -30,13 +29,8 @@ class Parseador (QThread):
       #definimos donde guardo datos del parseo, hoy es excel mañana bbdd
       self.ruta_parseo = r"{}\parseos\peliculas_{}.xlsx".format(self.directorio, self.fecha_hora)
       self.excel_parseo = self.crea_archivo_parseo()
-
       self.val = 0
 
-    def run(self):
-      while 1:
-        val = self.emitidos()
-        self.countChanged.emit(val)
 
     def fecha_y_hora (self):
       hoy = str(datetime.now().date())
@@ -91,6 +85,7 @@ class Parseador (QThread):
       total = len(lista_titulos)
       for index, i in enumerate(lista_titulos, start=1):
         self.val = 100 * float(index)/float(total)
+        self.countChanged.emit(self.val)
         print(str(self.val), i.text)
         tupla_p_excel = self.formato_texto(i.text, index)
         self.parseo.append(tupla_p_excel)
